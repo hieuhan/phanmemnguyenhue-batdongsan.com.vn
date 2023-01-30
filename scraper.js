@@ -3,7 +3,7 @@ const UserAgent = require('user-agents');
 const userAgent = new UserAgent({ deviceCategory: 'desktop' });
 const configs = require('./configs');
 const db_helpers = require('./db_helpers');
-const {handlePromise, getProductUrl, getRandomNumber, urlRequestIsValid, urlRequestGetCurrentPage} = require('./utils');
+const utils = require('./utils');
 
 const scraperObject = 
 {
@@ -12,7 +12,7 @@ const scraperObject =
     {
         try 
         {
-            if (!urlRequestIsValid(this.urlRequest)) 
+            if (!utils.urlRequestIsValid(this.urlRequest)) 
             {
                 await this.scrapeLog({
                     Path: this.urlRequest,
@@ -28,7 +28,7 @@ const scraperObject =
             {
                 if(await pageSetUserAgent(page))
                 {
-                    const currentPage = urlRequestGetCurrentPage(this.urlRequest);
+                    const currentPage = utils.urlRequestGetCurrentPage(this.urlRequest);
                     
                     console.log(`Truy cập trang => ${currentPage} => danh sách bài đăng => \n ${this.urlRequest}\n`);
 
@@ -76,7 +76,7 @@ const scraperObject =
 
                                         if(productLinkElementData)
                                         {
-                                            item.ProductUrl = getProductUrl(productLinkElementData.trim());
+                                            item.ProductUrl = utils.getProductUrl(productLinkElementData.trim());
                                             
                                             const cardImageElement = $(element).find('.re__card-image > img').first();
 
@@ -195,9 +195,9 @@ const scraperObject =
 
                                     if(nextButtonParentHref)
                                     {
-                                        const nextUrl = getProductUrl(nextButtonParentHref);
+                                        const nextUrl = utils.getProductUrl(nextButtonParentHref);
 
-                                        const nextPage = urlRequestGetCurrentPage(nextButtonParentHref);
+                                        const nextPage = utils.urlRequestGetCurrentPage(nextButtonParentHref);
                     
                                         console.log(`Truy cập trang => ${nextPage} => danh sách bài đăng => \n ${nextUrl}\n`);
                                         
@@ -1703,17 +1703,16 @@ const scraperObject =
             async function waitForTimeout(page)
             {
                 let resultVar = false;
+                const randomNumber = utils.getRandomNumber();
                 try 
                 {
-                    const randomNumber = getRandomNumber();
-
                     console.log(`Đợi xử lý sau => ${randomNumber/1000} giây...\n`);
 
                     const [waitForTimeoutError, waitForTimeout] = await handlePromise(page.waitForTimeout(randomNumber));
 
                     if(waitForTimeoutError)
                     {
-                        console.log(`waitForSelector('${selector}') error => ${waitForTimeoutError}\n`);
+                        console.log(`waitForTimeout('${randomNumber}') error => ${waitForTimeoutError}\n`);
                     }
                     else
                     {
@@ -1722,7 +1721,7 @@ const scraperObject =
                 } 
                 catch (error) 
                 {
-                    console.error(`waitForTimeout('${random}') error => ${error.message}\n stack trace => ${error.stack}\n`);
+                    console.error(`waitForTimeout('${randomNumber}') error => ${error.message}\n stack trace => ${error.stack}\n`);
                 }
 
                 return resultVar;

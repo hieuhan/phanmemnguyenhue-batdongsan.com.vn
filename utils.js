@@ -8,7 +8,17 @@ function handlePromise (promise)
 
 function getRandomNumber()
 {
-    return Math.floor(Math.random() * (configs.max - configs.min + 1)) + configs.min;
+    let resultVar = 0;
+    try 
+    {
+        resultVar = Math.floor(Math.random() * (configs.max - configs.min + 1)) + configs.min;
+    } 
+    catch (error) 
+    {
+        console.error(`getRandomNumber error => ${error.message}\n stack trace => ${error.stack}\n`);
+    }
+    
+    return resultVar;
 }
 
 function urlRequestIsValid(urlRequest)
