@@ -201,9 +201,14 @@ const scraperObject =
                                         const nextPage = utils.urlRequestGetCurrentPage(nextButtonParentHref);
                     
                                         console.log(`Truy cập trang => ${nextPage} => danh sách bài đăng => \n ${nextUrl}\n`);
-                                        
+
                                         if(await pageGoto(page, nextUrl))
                                         {
+                                            await scraperObject.scrapeLog({
+                                                Path: nextUrl,
+                                                Message: `Truy cập trang => ${nextPage}`
+                                            });
+
                                             return scrapeCurrentPage(nextUrl);
                                         }
                                     }
