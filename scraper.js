@@ -116,7 +116,7 @@ const scraperObject =
 
                                                 if(await waitForSelector(newPage, '.re__main-content-layout'))
                                                 {
-                                                    const [hiddenPhoneNumbersError, hiddenPhoneNumbers] = await handlePromise(newPage.$$('.re__main-content .hidden-mobile.hidden-phone.m-cover.js__btn-tracking'));
+                                                    const [hiddenPhoneNumbersError, hiddenPhoneNumbers] = await utils.handlePromise(newPage.$$('.re__main-content .hidden-mobile.hidden-phone.m-cover.js__btn-tracking'));
 
                                                     if(hiddenPhoneNumbersError)
                                                     {
@@ -132,7 +132,7 @@ const scraperObject =
     
                                                             for (const element of hiddenPhoneNumbers)
                                                             {
-                                                                const [rawError, raw] = await handlePromise(newPage.evaluate(el => el.getAttribute('raw'), element));
+                                                                const [rawError, raw] = await utils.handlePromise(newPage.evaluate(el => el.getAttribute('raw'), element));
     
                                                                 if(rawError)
                                                                 {
@@ -226,7 +226,7 @@ const scraperObject =
 
                 try 
                 {
-                    const [phoneNumberError, phoneNumber] = await handlePromise(page.evaluate(el => el.innerText, element));
+                    const [phoneNumberError, phoneNumber] = await utils.handlePromise(page.evaluate(el => el.innerText, element));
 
                     if(phoneNumberError)
                     {
@@ -249,7 +249,7 @@ const scraperObject =
             {
                 try 
                 {
-                    let phoneNumber = await handlePromise(decryptGetPhoneNumber(page, element, pageUrl, productUrl));
+                    let phoneNumber = await utils.handlePromise(decryptGetPhoneNumber(page, element, pageUrl, productUrl));
 
                     if(phoneNumber.length > 0)
                     {
@@ -257,7 +257,7 @@ const scraperObject =
 
                         let xhrDecryptPhoneCatcher = page.waitForResponse(r => r.request().url().includes(configs.decryptPhoneUrl) && r.request().method() != 'OPTIONS');
     
-                        const [elementClickError, elementClick] = await handlePromise(page.evaluate(e => e.click(), element));
+                        const [elementClickError, elementClick] = await utils.handlePromise(page.evaluate(e => e.click(), element));
     
                         if(elementClickError)
                         {
@@ -267,7 +267,7 @@ const scraperObject =
                         {
                             await waitForSelector(page, '.hidden-mobile.hidden-phone.m-cover.js__btn-tracking.m-uncover');
     
-                            const [xhrDecryptPhoneResponseError, xhrDecryptPhoneResponse] = await handlePromise(xhrDecryptPhoneCatcher);
+                            const [xhrDecryptPhoneResponseError, xhrDecryptPhoneResponse] = await utils.handlePromise(xhrDecryptPhoneCatcher);
     
                             if(xhrDecryptPhoneResponseError)
                             {
@@ -275,7 +275,7 @@ const scraperObject =
                             }
                             else
                             {
-                                const [xhrDecryptPhonePayloadError, xhrDecryptPhonePayload] = await handlePromise(xhrDecryptPhoneResponse.text());
+                                const [xhrDecryptPhonePayloadError, xhrDecryptPhonePayload] = await utils.handlePromise(xhrDecryptPhoneResponse.text());
     
                                 if(xhrDecryptPhonePayloadError)
                                 {
@@ -1464,7 +1464,7 @@ const scraperObject =
                                 {
                                     try 
                                     {
-                                        publishedAt = new Date(`${publishedAtSplit[1].trim()}/${publishedAtSplit[0].trim()}/${publishedAtSplit[2].trim()}`).toISOString();
+                                        publishedAt = new Date(`${publishedAtSplit[2].trim()}-${publishedAtSplit[1].trim()}-${publishedAtSplit[0].trim()}`).toISOString();
                                     } 
                                     catch (error) 
                                     {
@@ -1484,7 +1484,7 @@ const scraperObject =
                                 {
                                     try 
                                     {
-                                        expirationAt = new Date(`${expirationAtSplit[1].trim()}/${expirationAtSplit[0].trim()}/${expirationAtSplit[2].trim()}`).toISOString();
+                                        expirationAt = new Date(`${expirationAtSplit[2].trim()}-${expirationAtSplit[1].trim()}-${expirationAtSplit[0].trim()}`).toISOString();
                                     } 
                                     catch (error) 
                                     {
@@ -1592,7 +1592,7 @@ const scraperObject =
                 let resultVar;
                 try 
                 {
-                    const [pageContentError, pageContent] = await handlePromise(page.content());
+                    const [pageContentError, pageContent] = await utils.handlePromise(page.content());
 
                     if(pageContentError)
                     {
@@ -1616,7 +1616,7 @@ const scraperObject =
                 let pageError, page;
                 try 
                 {
-                    [pageError, page] = await handlePromise(browser.newPage());
+                    [pageError, page] = await utils.handlePromise(browser.newPage());
 
                     if(pageError)
                     {
@@ -1636,7 +1636,7 @@ const scraperObject =
                 let resultVar = false;
                 try 
                 {
-                    const [pageSetUserAgentError, pageUserAgent] = await handlePromise(page.setUserAgent(userAgent.random().toString()));
+                    const [pageSetUserAgentError, pageUserAgent] = await utils.handlePromise(page.setUserAgent(userAgent.random().toString()));
 
                     if(pageSetUserAgentError)
                     {
@@ -1660,7 +1660,7 @@ const scraperObject =
                 let resultVar = false;
                 try 
                 {
-                    const [pageGotoError, pageGoto] = await handlePromise(page.goto(path , { waitUntil: 'networkidle2', timeout: 0 }));
+                    const [pageGotoError, pageGoto] = await utils.handlePromise(page.goto(path , { waitUntil: 'networkidle2', timeout: 0 }));
 
                     if(pageGotoError)
                     {
@@ -1683,7 +1683,7 @@ const scraperObject =
             {
                 try 
                 {
-                    const [pageCloseError, pageClose] = await handlePromise(page.close());
+                    const [pageCloseError, pageClose] = await utils.handlePromise(page.close());
 
                     if(pageCloseError)
                     {
@@ -1708,7 +1708,7 @@ const scraperObject =
                 {
                     console.log(`Đợi xử lý sau => ${randomNumber/1000} giây...\n`);
 
-                    const [waitForTimeoutError, waitForTimeout] = await handlePromise(page.waitForTimeout(randomNumber));
+                    const [waitForTimeoutError, waitForTimeout] = await utils.handlePromise(page.waitForTimeout(randomNumber));
 
                     if(waitForTimeoutError)
                     {
@@ -1732,7 +1732,7 @@ const scraperObject =
                 let resultVar = false;
                 try 
                 {
-                    const [pageWaitForSelectorError, pageWaitForSelector] = await handlePromise(page.waitForSelector(selector));
+                    const [pageWaitForSelectorError, pageWaitForSelector] = await utils.handlePromise(page.waitForSelector(selector));
 
                     if(pageWaitForSelectorError)
                     {
@@ -1761,7 +1761,7 @@ const scraperObject =
         try 
         {
             const [scrapeLogInsertError, data] = 
-                    await handlePromise(db_helpers.scrapeLogInsert({
+                    await utils.handlePromise(db_helpers.scrapeLogInsert({
                         ActBy: configs.actionBy,
                         SiteId: configs.siteId,
                         Path: scrapeLog.Path,

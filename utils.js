@@ -11,7 +11,7 @@ function getRandomNumber()
     let resultVar = 0;
     try 
     {
-        resultVar = Math.floor(Math.random() * (configs.max - configs.min + 1)) + configs.min;
+        resultVar = Math.floor(Math.random() * (configs.randomMax - configs.randomMin + 1)) + configs.randomMin;
     } 
     catch (error) 
     {
