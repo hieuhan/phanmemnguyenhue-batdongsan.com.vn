@@ -11,14 +11,10 @@ async function main()
 
         if(browser != null)
         {
-            scraperObject.urlRequest = 'https://batdongsan.com.vn/nha-dat-ban/p1';
-		
-            const [scraperError, scraperData] = await handlePromise(scraperObject.scraper(browser));
-
-            if(scraperError)
-            {
-                console.log(`main => scraperObject.scraper(browser) error => ${scraperError}\n`);
-            }
+            await Promise.all([
+                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-ban/p1')),
+                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-cho-thue/p1'))
+            ]);
         }
     } 
     catch (error) 

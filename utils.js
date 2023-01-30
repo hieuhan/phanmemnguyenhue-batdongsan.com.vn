@@ -91,11 +91,24 @@ function urlRequestGetCurrentPage(urlRequest)
     return currentPage;
 }
 
+function dateToISOString(day, month, year)
+{
+    try 
+    {
+        return [undefined, new Date(`${year.trim()}-${month.trim()}-${day.trim()}`).toISOString()];
+    } 
+    catch (error) 
+    {
+        return [error, undefined]
+    }
+}
+
 module.exports = 
 {
     handlePromise: handlePromise,
     getRandomNumber: getRandomNumber,
     urlRequestIsValid: urlRequestIsValid,
     getProductUrl: getProductUrl,
-    urlRequestGetCurrentPage: urlRequestGetCurrentPage
+    urlRequestGetCurrentPage: urlRequestGetCurrentPage,
+    dateToISOString: dateToISOString
 };

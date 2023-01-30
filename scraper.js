@@ -7,15 +7,14 @@ const utils = require('./utils');
 
 const scraperObject = 
 {
-    urlRequest: '',
-    async scraper(browser)
+    async scraper(browser, urlRequest)
     {
         try 
         {
-            if (!utils.urlRequestIsValid(this.urlRequest)) 
+            if (!utils.urlRequestIsValid(urlRequest)) 
             {
                 await this.scrapeLog({
-                    Path: this.urlRequest,
+                    Path: urlRequest,
                     Message: 'Url không hợp lệ'
                 });
 
@@ -28,20 +27,20 @@ const scraperObject =
             {
                 if(await pageSetUserAgent(page))
                 {
-                    const currentPage = utils.urlRequestGetCurrentPage(this.urlRequest);
+                    const currentPage = utils.urlRequestGetCurrentPage(urlRequest);
                     
-                    console.log(`Truy cập trang => ${currentPage} => danh sách bài đăng => \n ${this.urlRequest}\n`);
+                    console.log(`Truy cập trang => ${currentPage} => danh sách bài đăng => \n ${urlRequest}\n`);
 
-                    if(await pageGoto(page, this.urlRequest))
+                    if(await pageGoto(page, urlRequest))
                     {
                         await this.scrapeLog({
-                            Path: this.urlRequest,
+                            Path: urlRequest,
                             Message: `Truy cập trang => ${currentPage}`
                         });
 
                         await waitForTimeout(page);
 
-                        await scrapeCurrentPage(this.urlRequest);
+                        await scrapeCurrentPage(urlRequest);
 
                     }
                 }
@@ -129,9 +128,11 @@ const scraperObject =
                                                             await waitForTimeout(newPage);
     
                                                             let decryptPhoneNumbersExists = [];
-    
+   
                                                             for (const element of hiddenPhoneNumbers)
                                                             {
+                                                                retryDecryptPhone = 0;
+
                                                                 const [rawError, raw] = await utils.handlePromise(newPage.evaluate(el => el.getAttribute('raw'), element));
     
                                                                 if(rawError)
@@ -253,6 +254,8 @@ const scraperObject =
 
                     if(phoneNumber.length > 0)
                     {
+                        retryDecryptPhone++;
+
                         console.log(`Xử lý số điện thoại => ${phoneNumber}\n => ẩn trong nội dung bài đăng\n => ${productUrl}\n`);
 
                         let xhrDecryptPhoneCatcher = page.waitForResponse(r => r.request().url().includes(configs.decryptPhoneUrl) && r.request().method() != 'OPTIONS');
@@ -265,28 +268,47 @@ const scraperObject =
                         }
                         else
                         {
-                            await waitForSelector(page, '.hidden-mobile.hidden-phone.m-cover.js__btn-tracking.m-uncover');
-    
-                            const [xhrDecryptPhoneResponseError, xhrDecryptPhoneResponse] = await utils.handlePromise(xhrDecryptPhoneCatcher);
-    
-                            if(xhrDecryptPhoneResponseError)
+                            if(await waitForSelector(page, '.hidden-mobile.hidden-phone.m-cover.js__btn-tracking.m-uncover'))
                             {
-                                console.log(`xhrDecryptPhoneCatcher => ${phoneNumber} => error => ${xhrDecryptPhoneResponseError}\n`);
-                            }
-                            else
-                            {
-                                const [xhrDecryptPhonePayloadError, xhrDecryptPhonePayload] = await utils.handlePromise(xhrDecryptPhoneResponse.text());
+                                const [xhrDecryptPhoneResponseError, xhrDecryptPhoneResponse] = await utils.handlePromise(xhrDecryptPhoneCatcher);
     
-                                if(xhrDecryptPhonePayloadError)
+                                if(xhrDecryptPhoneResponseError)
                                 {
-                                    console.log(`xhrDecryptPhonePayload => ${phoneNumber} => error => ${xhrDecryptPhonePayloadError}\n`);
+                                    console.log(`xhrDecryptPhoneCatcher => ${phoneNumber} => error => ${xhrDecryptPhoneResponseError}\n`);
                                 }
                                 else
                                 {
-                                    console.log(`Hiển thị được số điện thoại => ${xhrDecryptPhonePayload}\n`);
+                                    const [xhrDecryptPhonePayloadError, xhrDecryptPhonePayload] = await utils.handlePromise(xhrDecryptPhoneResponse.text());
+        
+                                    if(xhrDecryptPhonePayloadError)
+                                    {
+                                        console.log(`xhrDecryptPhonePayload => ${phoneNumber} => error => ${xhrDecryptPhonePayloadError}\n`);
+                                    }
+                                    else
+                                    {
+                                        console.log(`Hiển thị được số điện thoại => ${xhrDecryptPhonePayload}\n`);
+                                    }
                                 }
                             }
-                            
+                            else
+                            {
+                                //reload page
+                                console.log(`decryptPhoneNumber => ${phoneNumber} => page reload => ${pageUrl} => ${productUrl}\n`);
+
+                                await scraperObject.scrapeLog({
+                                    Path: pageUrl,
+                                    DetailPath: productUrl,
+                                    Message: `decryptPhoneNumber => ${phoneNumber} => page reload`
+                                });
+
+                                await waitForSelector(page);
+
+                                if(await waitForSelector(page))
+                                {
+                                    await pageReload(page);
+                                }
+                            }
+    
                             await waitForTimeout(page);
                         }
                     }
@@ -501,7 +523,7 @@ const scraperObject =
 
                     if(projectInfoElement.length > 0)
                     {
-                        let projectName = '', projectStatus = '', 
+                        let projectName = '', projectStatus = '', imagePath = '',
                             projectPrice = '', projectArea = '', projectApartment = 0, projectBuilding = 0;
 
                         const projectTitleElement = projectInfoElement.find('.re__project-title').first();
@@ -513,6 +535,25 @@ const scraperObject =
 
                         if(projectName.length > 0)
                         {
+                            //ảnh dự án
+                            const sectionAvatarElement = projectInfoElement.find('.re__section-avatar').first();
+
+                            if(sectionAvatarElement.length > 0)
+                            {
+                                const imagePathElement = sectionAvatarElement.find('img').first();
+
+                                if(imagePathElement.length > 0)
+                                {
+                                    const imageSource = imagePathElement.attr('src') || imagePathElement.attr('data-src');
+
+                                    if(imageSource && imageSource.trim().length > 0)
+                                    {
+                                        imagePath = imageSource.trim();
+                                    }
+                                }
+                            }
+
+
                             //trạng thái
                             const iconInfoElement = projectInfoElement.find('.re__icon-info-circle--sm').first();
 
@@ -615,6 +656,7 @@ const scraperObject =
                                 DistrictId: districtId,
                                 Name: projectName,
                                 Description: null,
+                                ImagePath: imagePath,
                                 PriceFrom: null,
                                 PriceTo: null,
                                 ComputedPriceFrom: null,
@@ -1462,13 +1504,15 @@ const scraperObject =
 
                                 if(publishedAtSplit.length == 3)
                                 {
-                                    try 
+                                    const [ publishedAtError, publishedAtData] = utils.dateToISOString(publishedAtSplit[0] , publishedAtSplit[1], publishedAtSplit[2]);
+                                    
+                                    if(publishedAtError)
                                     {
-                                        publishedAt = new Date(`${publishedAtSplit[2].trim()}-${publishedAtSplit[1].trim()}-${publishedAtSplit[0].trim()}`).toISOString();
-                                    } 
-                                    catch (error) 
+                                        await scraperObject.logError(`Bài đăng => ${title} => PublishedAt`, publishedAtError, pageUrl, productUrl);
+                                    }
+                                    else
                                     {
-                                        await scraperObject.logError(`Bài đăng ${title} => PublishedAt`, error, pageUrl, productUrl);
+                                        publishedAt = publishedAtData;
                                     }
                                 }
                             }
@@ -1482,13 +1526,15 @@ const scraperObject =
 
                                 if(expirationAtSplit.length == 3)
                                 {
-                                    try 
+                                    const [ expirationAtError, expirationAtData] = utils.dateToISOString(expirationAtSplit[0], expirationAtSplit[1], expirationAtSplit[2]);
+
+                                    if(expirationAtError)
                                     {
-                                        expirationAt = new Date(`${expirationAtSplit[2].trim()}-${expirationAtSplit[1].trim()}-${expirationAtSplit[0].trim()}`).toISOString();
-                                    } 
-                                    catch (error) 
+                                        await scraperObject.logError(`Bài đăng => ${title} => ExpirationAt`, expirationAtError, pageUrl, productUrl);
+                                    }
+                                    else 
                                     {
-                                        await scraperObject.logError(`Bài đăng ${title} => ExpirationAt`, error, pageUrl, productUrl);
+                                        expirationAt = expirationAtData;
                                     }
                                 }
                             }
@@ -1679,6 +1725,30 @@ const scraperObject =
                 return resultVar;
             }
 
+            async function pageReload(page)
+            {
+                let resultVar = false;
+                try 
+                {
+                    const [pageReloadError, pageReload] = await utils.handlePromise(page.reload({  waitUntil: 'networkidle2', timeout: 0 }));
+
+                    if(pageReloadError)
+                    {
+                        console.log(`pageReload error => ${pageReloadError}\n`);
+                    }
+                    else
+                    {
+                        resultVar = true;
+                    }
+                } 
+                catch (error) 
+                {
+                    console.error(`pageReload error => ${error.message}\n stack trace => ${error.stack}\n`);
+                }
+
+                return resultVar;
+            }
+
             async function pageClose(page, path)
             {
                 try 
@@ -1791,9 +1861,9 @@ const scraperObject =
                 Message: `${message} error => ${error.message}\n stack trace => ${error.stack}`
             });
         } 
-        catch (error) 
+        catch (err) 
         {
-            console.error(`logError error => ${error.message}\n stack trace => ${error.stack}\n`);
+            console.error(`logError error => ${err.message}\n stack trace => ${err.stack}\n`);
         }
     }
 
