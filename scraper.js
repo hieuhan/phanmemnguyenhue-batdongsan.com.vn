@@ -255,68 +255,80 @@ const scraperObject =
             {
                 try 
                 {
-                    let phoneNumber = await utils.handlePromise(decryptGetPhoneNumber(page, element, pageUrl, productUrl));
+                    //let phoneNumber = await utils.handlePromise(decryptGetPhoneNumber(page, element, pageUrl, productUrl));
 
-                    if(phoneNumber.length > 0)
-                    {
+                    //if(phoneNumber.length > 0)
+                    //{
                         retryDecryptPhone++;
 
-                        console.log(`Xử lý số điện thoại => ${phoneNumber}\n => ẩn trong nội dung bài đăng\n => ${productUrl}\n`);
-
-                        let xhrDecryptPhoneCatcher = page.waitForResponse(r => r.request().url().includes(configs.decryptPhoneUrl) && r.request().method() != 'OPTIONS');
+                        //console.log(`Xử lý số điện thoại => ${phoneNumber}\n => ẩn trong nội dung bài đăng\n => ${productUrl}\n`);
+                        console.log(`Xử lý số điện thoại ẩn trong nội dung bài đăng\n => ${productUrl}\n`);
+                        
+                        //let xhrDecryptPhoneCatcher = page.waitForResponse(r => r.request().url().includes(configs.decryptPhoneUrl) && r.request().method() != 'OPTIONS');
     
                         const [elementClickError, elementClick] = await utils.handlePromise(page.evaluate(e => e.click(), element));
     
                         if(elementClickError)
                         {
-                            console.log(`decryptPhoneNumber => click => ${phoneNumber} => error => ${elementClickError}\n`);
+                            console.log(`decryptPhoneNumber => click => error => ${elementClickError}\n`);
+
+                            //reload page
+                            console.log(`decryptPhoneNumber => page reload => ${pageUrl} => ${productUrl}\n`);
+
+                            await scraperObject.scrapeLog({
+                                Path: pageUrl,
+                                DetailPath: productUrl,
+                                Message: `decryptPhoneNumber => page reload`
+                            });
+
+                            await pageReload(page);
                         }
                         else
                         {
-                            if(await waitForSelector(page, '.hidden-mobile.hidden-phone.m-cover.js__btn-tracking.m-uncover'))
-                            {
-                                const [xhrDecryptPhoneResponseError, xhrDecryptPhoneResponse] = await utils.handlePromise(xhrDecryptPhoneCatcher);
+                            // if(await waitForSelector(page, '.hidden-mobile.hidden-phone.m-cover.js__btn-tracking.m-uncover'))
+                            // {
+                            //     const [xhrDecryptPhoneResponseError, xhrDecryptPhoneResponse] = await utils.handlePromise(xhrDecryptPhoneCatcher);
     
-                                if(xhrDecryptPhoneResponseError)
-                                {
-                                    console.log(`xhrDecryptPhoneCatcher => ${phoneNumber} => error => ${xhrDecryptPhoneResponseError}\n`);
-                                }
-                                else
-                                {
-                                    const [xhrDecryptPhonePayloadError, xhrDecryptPhonePayload] = await utils.handlePromise(xhrDecryptPhoneResponse.text());
+                            //     if(xhrDecryptPhoneResponseError)
+                            //     {
+                            //         console.log(`xhrDecryptPhoneCatcher => ${phoneNumber} => error => ${xhrDecryptPhoneResponseError}\n`);
+                            //     }
+                            //     else
+                            //     {
+                            //         const [xhrDecryptPhonePayloadError, xhrDecryptPhonePayload] = await utils.handlePromise(xhrDecryptPhoneResponse.text());
         
-                                    if(xhrDecryptPhonePayloadError)
-                                    {
-                                        console.log(`xhrDecryptPhonePayload => ${phoneNumber} => error => ${xhrDecryptPhonePayloadError}\n`);
-                                    }
-                                    else
-                                    {
-                                        console.log(`Hiển thị được số điện thoại => ${xhrDecryptPhonePayload}\n`);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                //reload page
-                                console.log(`decryptPhoneNumber => ${phoneNumber} => page reload => ${pageUrl} => ${productUrl}\n`);
+                            //         if(xhrDecryptPhonePayloadError)
+                            //         {
+                            //             console.log(`xhrDecryptPhonePayload => ${phoneNumber} => error => ${xhrDecryptPhonePayloadError}\n`);
+                            //         }
+                            //         else
+                            //         {
+                            //             console.log(`Hiển thị được số điện thoại => ${xhrDecryptPhonePayload}\n`);
+                            //         }
+                            //     }
+                            // }
+                            // else
+                            // {
+                            //     //reload page
+                            //     console.log(`decryptPhoneNumber => ${phoneNumber} => page reload => ${pageUrl} => ${productUrl}\n`);
 
-                                await scraperObject.scrapeLog({
-                                    Path: pageUrl,
-                                    DetailPath: productUrl,
-                                    Message: `decryptPhoneNumber => ${phoneNumber} => page reload`
-                                });
+                            //     await scraperObject.scrapeLog({
+                            //         Path: pageUrl,
+                            //         DetailPath: productUrl,
+                            //         Message: `decryptPhoneNumber => ${phoneNumber} => page reload`
+                            //     });
 
-                                await waitForSelector(page);
+                            //     //await waitForSelector(page);
 
-                                if(await waitForSelector(page))
-                                {
-                                    await pageReload(page);
-                                }
-                            }
+                            //     //if(await waitForSelector(page))
+                            //     //{
+                            //         await pageReload(page);
+                            //     //}
+                            // }
     
                             await waitForTimeout(page);
                         }
-                    }
+                    //}
                 } 
                 catch (error) 
                 {

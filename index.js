@@ -13,7 +13,8 @@ async function main()
         {
             await Promise.all([
                 handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-ban/p1')),
-                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-cho-thue/p1'))
+                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-cho-thue/p1')),
+                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-ban-ung-hoa/p1'))
             ]);
         }
     } 
