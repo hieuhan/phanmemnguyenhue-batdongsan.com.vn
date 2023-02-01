@@ -13,15 +13,16 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "user-agents": "^1.0.1274",
+    "dotenv": "^16.0.3",
+    "mssql": "^9.1.1",
     "puppeteer": "^19.6.2",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-stealth": "^2.11.1",
-    "dotenv": "^16.0.3",
-    "mssql": "^9.1.1"
+    "user-agents": "^1.0.1274"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "rimraf": "^4.1.2"
   },
   "keywords": [],
   "author": "",

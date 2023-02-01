@@ -4,17 +4,25 @@ const {handlePromise} = require('./utils');
 
 async function main() 
 {  
-    let browser;
+    let browser, browserPost;
     try 
     {
-        browser = await browserObject.startBrowser();
+        [browser, browserPost] = await Promise.all([
+            browserObject.startBrowser(),
+            browserObject.startBrowser(true, true)
+        ]);
 
-        if(browser != null)
+        if(browser != null && browserPost != null)
         {
             await Promise.all([
-                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-ban/p1')),
-                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-cho-thue/p1')),
-                handlePromise(scraperObject.scraper(browser, 'https://batdongsan.com.vn/nha-dat-ban-ung-hoa/p1'))
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-binh-duong/p1')),
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-da-nang/p1')),
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-khanh-hoa/p1')),
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-dong-nai/p1')),
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-hai-phong/p1')),
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-ba-ria-vung-tau/p1')),
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-an-giang/p1')),
+                handlePromise(scraperObject.scraper(browser, browserPost, 'https://batdongsan.com.vn/nha-dat-ban-bac-giang/p1'))
             ]);
         }
     } 
@@ -33,6 +41,18 @@ async function main()
             if(browserCloseError)
             {
                 console.log(`main => browser.close() error => ${browserCloseError}\n`);
+            }
+        }
+
+        if (browserPost) 
+        {
+            console.log('Đóng trình duyệt post...');
+
+            const [browserPostCloseError, browserPostClose] = await handlePromise(browserPost.close());
+
+            if(browserPostCloseError)
+            {
+                console.log(`main => browserPost.close() error => ${browserPostCloseError}\n`);
             }
         }
     }

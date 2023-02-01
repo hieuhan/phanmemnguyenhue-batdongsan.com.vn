@@ -4,10 +4,12 @@ const userAgent = new UserAgent({ deviceCategory: 'desktop' });
 const configs = require('./configs');
 const db_helpers = require('./db_helpers');
 const utils = require('./utils');
+const browserObject = require('./browser');
+const { handlePromise } = require('./utils');
 
 const scraperObject = 
 {
-    async scraper(browser, urlRequest)
+    async scraper(browser, browserPost, urlRequest)
     {
         try 
         {
@@ -115,46 +117,46 @@ const scraperObject =
 
                                                 if(await waitForSelector(newPage, '.re__main-content-layout'))
                                                 {
-                                                    const [hiddenPhoneNumbersError, hiddenPhoneNumbers] = await utils.handlePromise(newPage.$$('.re__main-content .hidden-mobile.hidden-phone.m-cover.js__btn-tracking'));
+                                                    // const [hiddenPhoneNumbersError, hiddenPhoneNumbers] = await utils.handlePromise(newPage.$$('.re__main-content .hidden-mobile.hidden-phone.m-cover.js__btn-tracking'));
 
-                                                    if(hiddenPhoneNumbersError)
-                                                    {
-                                                        console.log(`pagePromise => get hiddenPhoneNumbers error => ${hiddenPhoneNumbersError}\n`);
-                                                    }
-                                                    else
-                                                    {
-                                                        if(hiddenPhoneNumbers.length > 0)
-                                                        {
-                                                            await waitForTimeout(newPage);
+                                                    // if(hiddenPhoneNumbersError)
+                                                    // {
+                                                    //     console.log(`pagePromise => get hiddenPhoneNumbers error => ${hiddenPhoneNumbersError}\n`);
+                                                    // }
+                                                    // else
+                                                    // {
+                                                    //     if(hiddenPhoneNumbers.length > 0)
+                                                    //     {
+                                                    //         await waitForTimeout(newPage);
     
-                                                            let decryptPhoneNumbersExists = [];
+                                                    //         let decryptPhoneNumbersExists = [];
    
-                                                            for (const element of hiddenPhoneNumbers)
-                                                            {
-                                                                retryDecryptPhone = 0;
+                                                    //         for (const element of hiddenPhoneNumbers)
+                                                    //         {
+                                                    //             retryDecryptPhone = 0;
 
-                                                                const [rawError, raw] = await utils.handlePromise(newPage.evaluate(el => el.getAttribute('raw'), element));
+                                                    //             const [rawError, raw] = await utils.handlePromise(newPage.evaluate(el => el.getAttribute('raw'), element));
     
-                                                                if(rawError)
-                                                                {
-                                                                    console.log(`pagePromise => hiddenPhoneNumbers error => ${rawError}\n`);
-                                                                }
-                                                                else
-                                                                {
-                                                                    if(!decryptPhoneNumbersExists.includes(raw))
-                                                                    {
-                                                                        await decryptPhoneNumber(newPage, element, pageUrl, productUrl);
+                                                    //             if(rawError)
+                                                    //             {
+                                                    //                 console.log(`pagePromise => hiddenPhoneNumbers error => ${rawError}\n`);
+                                                    //             }
+                                                    //             else
+                                                    //             {
+                                                    //                 if(!decryptPhoneNumbersExists.includes(raw))
+                                                    //                 {
+                                                    //                     await decryptPhone(newPage, pageUrl, productUrl, raw);
     
-                                                                        decryptPhoneNumbersExists.push(raw);
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                        else
-                                                        {
-                                                            console.log(`Nội dung bài đăng => ${productUrl} => không chứa số điện thoại ẩn.\n`);
-                                                        }
-                                                    }
+                                                    //                     decryptPhoneNumbersExists.push(raw);
+                                                    //                 }
+                                                    //             }
+                                                    //         }
+                                                    //     }
+                                                    //     else
+                                                    //     {
+                                                    //         console.log(`Nội dung bài đăng => ${productUrl} => không chứa số điện thoại ẩn.\n`);
+                                                    //     }
+                                                    // }
 
                                                     dataObj = await parserData(newPage, pageUrl, productUrl, imagePath);
                                                 }
@@ -226,114 +228,173 @@ const scraperObject =
                 }
             }
 
-            async function decryptGetPhoneNumber(page, element, pageUrl, productUrl)
+            async function getPhoneNumbers($, productDetailWebElement, pageUrl, productUrl)
             {
-                let resultVar = '';
-
+                let title = '', productContent = '', raws = [];
                 try 
                 {
-                    const [phoneNumberError, phoneNumber] = await utils.handlePromise(page.evaluate(el => el.innerText, element));
+                    console.log(`Xử lý số điện thoại ẩn trong tiêu đề và nội dung bài đăng\n => ${productUrl}\n`);
 
-                    if(phoneNumberError)
+                    const productTitleElement = productDetailWebElement.find('.re__pr-title').first();
+
+                    const detailContentElement = productDetailWebElement.find('.re__detail-content').first();
+
+                    if(productTitleElement.length > 0)
                     {
-                        console.log(`decryptGetPhoneNumber => error => ${phoneNumberError}\n`);
+                        title = productTitleElement.html();
                     }
-                    else 
+
+                    if(detailContentElement.length > 0)
                     {
-                        resultVar = phoneNumber;
+                        productContent = detailContentElement.html();
                     }
-                } 
-                catch (error) 
-                {
-                    await scraperObject.logError('decryptGetPhoneNumber', error, pageUrl, productUrl);
-                }
 
-                return resultVar;
-            }
+                    let decryptPhone = (pageUrl, productUrl, raw)  => new Promise(async (resolve, reject) => {
 
-            async function decryptPhoneNumber(page, element, pageUrl, productUrl)
-            {
-                try 
-                {
-                    //let phoneNumber = await utils.handlePromise(decryptGetPhoneNumber(page, element, pageUrl, productUrl));
-
-                    //if(phoneNumber.length > 0)
-                    //{
-                        retryDecryptPhone++;
-
-                        //console.log(`Xử lý số điện thoại => ${phoneNumber}\n => ẩn trong nội dung bài đăng\n => ${productUrl}\n`);
-                        console.log(`Xử lý số điện thoại ẩn trong nội dung bài đăng\n => ${productUrl}\n`);
-                        
-                        //let xhrDecryptPhoneCatcher = page.waitForResponse(r => r.request().url().includes(configs.decryptPhoneUrl) && r.request().method() != 'OPTIONS');
-    
-                        const [elementClickError, elementClick] = await utils.handlePromise(page.evaluate(e => e.click(), element));
-    
-                        if(elementClickError)
-                        {
-                            console.log(`decryptPhoneNumber => click => error => ${elementClickError}\n`);
-
-                            //reload page
-                            console.log(`decryptPhoneNumber => page reload => ${pageUrl} => ${productUrl}\n`);
-
-                            await scraperObject.scrapeLog({
-                                Path: pageUrl,
-                                DetailPath: productUrl,
-                                Message: `decryptPhoneNumber => page reload`
-                            });
-
-                            await pageReload(page);
-                        }
-                        else
-                        {
-                            // if(await waitForSelector(page, '.hidden-mobile.hidden-phone.m-cover.js__btn-tracking.m-uncover'))
-                            // {
-                            //     const [xhrDecryptPhoneResponseError, xhrDecryptPhoneResponse] = await utils.handlePromise(xhrDecryptPhoneCatcher);
-    
-                            //     if(xhrDecryptPhoneResponseError)
-                            //     {
-                            //         console.log(`xhrDecryptPhoneCatcher => ${phoneNumber} => error => ${xhrDecryptPhoneResponseError}\n`);
-                            //     }
-                            //     else
-                            //     {
-                            //         const [xhrDecryptPhonePayloadError, xhrDecryptPhonePayload] = await utils.handlePromise(xhrDecryptPhoneResponse.text());
+                        let phoneNumber = '';
         
-                            //         if(xhrDecryptPhonePayloadError)
-                            //         {
-                            //             console.log(`xhrDecryptPhonePayload => ${phoneNumber} => error => ${xhrDecryptPhonePayloadError}\n`);
-                            //         }
-                            //         else
-                            //         {
-                            //             console.log(`Hiển thị được số điện thoại => ${xhrDecryptPhonePayload}\n`);
-                            //         }
-                            //     }
-                            // }
-                            // else
-                            // {
-                            //     //reload page
-                            //     console.log(`decryptPhoneNumber => ${phoneNumber} => page reload => ${pageUrl} => ${productUrl}\n`);
-
-                            //     await scraperObject.scrapeLog({
-                            //         Path: pageUrl,
-                            //         DetailPath: productUrl,
-                            //         Message: `decryptPhoneNumber => ${phoneNumber} => page reload`
-                            //     });
-
-                            //     //await waitForSelector(page);
-
-                            //     //if(await waitForSelector(page))
-                            //     //{
-                            //         await pageReload(page);
-                            //     //}
-                            // }
+                        try 
+                        {
+                            let newPage = await browserNewPage(browserPost);
     
-                            await waitForTimeout(page);
+                            if(newPage)
+                            {
+                                // Allows you to intercept a request
+                                const[setRequestInterceptionError, setRequestInterception] = await handlePromise(newPage.setRequestInterception(true));
+        
+                                if(setRequestInterceptionError)
+                                {
+                                    await scraperObject.logError('decryptPhone => setRequestInterception', setRequestInterceptionError, pageUrl, productUrl);
+                                }
+                                else
+                                {
+                                    // Request intercept handler... will be triggered with 
+                                    // each page.goto() statement
+                                    newPage.on('request', interceptedRequest => {
+        
+                                        // Here, is where you change the request method and 
+                                        // add your post data
+                                        var data = {
+                                            'method': 'POST',
+                                            'postData': `PhoneNumber=${raw}`,
+                                            headers: {
+                                                ...interceptedRequest.headers(),
+                                                "Content-Type": "application/x-www-form-urlencoded"
+                                            }
+                                        };
+        
+                                        // Request modified... finish sending! 
+                                        interceptedRequest.continue(data);
+                                    });
+        
+                                    const [responseError, response] = await handlePromise(newPage.goto(`${configs.websiteDomain}${configs.decryptPhoneUrl}`));  
+                                    
+                                    if(responseError)
+                                    {
+                                        await scraperObject.logError(`decryptPhone => newPage.goto('${configs.websiteDomain}${configs.decryptPhoneUrl}')`, responseError, pageUrl, productUrl);
+                                    }
+                                    else
+                                    {
+                                        const [responseTextError, responseText] = await handlePromise(response.text());
+        
+                                        if(responseTextError)
+                                        {
+                                            await scraperObject.logError('decryptPhone => get responseText', responseTextError, pageUrl, productUrl);
+                                        }
+                                        else
+                                        {
+                                            if(responseText.length < 20)
+                                            {
+                                                phoneNumber = responseText;
+                                            }
+                                            
+                                            await waitForTimeout(newPage);
+                                        }
+                                    }
+                                }
+                            }
+                        } 
+                        catch (error) 
+                        {
+                            await scraperObject.logError(`decryptPhone raw ${raw}`, error, pageUrl, productUrl);
+        
+                            reject('');
                         }
-                    //}
+        
+                        resolve(phoneNumber);
+                    });
+
+                    const phoneEventElement = $('.re__main-sidebar .phoneEvent.js__phone-event').first();
+
+                    if(phoneEventElement.length > 0)
+                    {
+                        if(phoneEventElement.attr('raw'))
+                        {
+                            var raw = phoneEventElement.attr('raw');
+
+                            raws.push(raw);
+
+                            var phoneNumber = await decryptPhone(pageUrl, productUrl, raw);
+
+                            if(phoneNumber.length > 0)
+                            {
+                                if(productTitleElement.length > 0)
+                                {
+                                    const hiddenMobileOnTitleElement = productTitleElement.find('.hidden-mobile.m-on-title').first();
+
+                                    if(hiddenMobileOnTitleElement.length > 0)
+                                    {
+                                        title = title.replace(hiddenMobileOnTitleElement.prop('outerHTML'), `<span class="phone-number">${phoneNumber}</span>`);
+                                    }
+                                }
+
+                                const hiddenPhoneByRawElement = productDetailWebElement.find(`.hidden-mobile.hidden-phone.m-cover.js__btn-tracking[raw="${raw}"]`);
+
+                                if(hiddenPhoneByRawElement.length > 0)
+                                {
+                                    hiddenPhoneByRawElement.each(function(index, element)
+                                    {
+                                        productContent = productContent.replace($(element).prop('outerHTML'), `<a href="tel:${phoneNumber}" title="${phoneNumber}" class="phone-number">${phoneNumber}</a>`);
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    const hiddenPhoneElement = productDetailWebElement.find('.hidden-mobile.hidden-phone.m-cover.js__btn-tracking');
+
+                    if(hiddenPhoneElement.length > 0)
+                    {
+                        hiddenPhoneElement.each(async function(index, element)
+                        {
+                            if($(element).attr('raw'))
+                            {
+                                var raw = $(element).attr('raw');
+
+                                if(!raws.includes(raw))
+                                {
+                                    raws.push(raw);
+
+                                    var phoneNumber = await decryptPhone(pageUrl, productUrl, raw);
+
+                                    if(phoneNumber.length > 0)
+                                    {
+                                        if(detailContentElement.length > 0)
+                                        {
+                                            productContent = productContent.replace(element.prop('outerHTML'), `<a href="tel:${phoneNumber}" title="${phoneNumber}" class="phone-number">${phoneNumber}</a>`);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
                 } 
                 catch (error) 
                 {
-                    await scraperObject.logError('decryptPhoneNumber', error, pageUrl, productUrl);
+                    await scraperObject.logError('getPhoneNumbers', error, pageUrl, productUrl);
                 }
+
+                return [title, productContent];
             }
 
             async function parserData(page, pageUrl, productUrl, imagePath)
@@ -1134,27 +1195,7 @@ const scraperObject =
                             address = addressElement.text().trim();
                         }
 
-                        const productTitleElement = productDetailWebElement.find('.re__pr-title').first();
-
-                        if(productTitleElement.length > 0)
-                        {
-                            title = productTitleElement.text().trim();
-
-                            let regexTitle = /<span class="hidden-mobile m-on-title m-uncover".*?>(.*?)<\/span>.*?/gm;
-
-                            title = title.replace(regexTitle, '<span class="phone-number">$1</span>');
-                        }
-
-                        const detailContentElement = productDetailWebElement.find('.re__detail-content').first();
-
-                        if(detailContentElement.length > 0)
-                        {
-                            productContent = detailContentElement.html();
-
-                            let regexProductContent = /<span class="hidden-mobile hidden-phone m-cover js__btn-tracking m-uncover".*?>(.*?)<\/span>.*?/gm;
-
-                            productContent = productContent.replace(regexProductContent, '<a href="tel:$1" title="$1" class="phone-number">$1</a>');
-                        }
+                        [title, productContent] = await getPhoneNumbers($, productDetailWebElement, pageUrl, productUrl);
 
                         const specsContentElement = $('.re__pr-specs-content.js__other-info').first();
 
@@ -1747,7 +1788,7 @@ const scraperObject =
                 let resultVar = false;
                 try 
                 {
-                    const [pageReloadError, pageReload] = await utils.handlePromise(page.reload({  waitUntil: 'networkidle2', timeout: 0 }));
+                    const [pageReloadError, pageReload] = await utils.handlePromise(page.reload({ waitUntil: ['networkidle0', 'domcontentloaded'] }));
 
                     if(pageReloadError)
                     {

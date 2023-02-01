@@ -6,7 +6,7 @@ const {handlePromise} = require('./utils');
 
 puppeteer.use(pluginStealth());
 
-async function startBrowser()
+async function startBrowser(headless, devtools)
 {
     let browser;
 	try 
@@ -15,8 +15,8 @@ async function startBrowser()
 
         const [startBrowserError, browserData] = 
             await handlePromise(puppeteer.launch({
-                headless: true,
-                devtools: true,
+                headless: headless || true,
+                devtools: devtools || true,
                 executablePath: configs.executablePath || executablePath(),
                 ignoreHTTPSErrors: true
             }));
