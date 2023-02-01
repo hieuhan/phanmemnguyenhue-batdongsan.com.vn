@@ -344,7 +344,7 @@ const scraperObject =
 
                                     if(hiddenMobileOnTitleElement.length > 0)
                                     {
-                                        title = title.replace(hiddenMobileOnTitleElement.prop('outerHTML'), `<span class="phone-number">${phoneNumber}</span>`);
+                                        title = title.replace(hiddenMobileOnTitleElement.prop('outerHTML'), `${phoneNumber}`);
                                     }
                                 }
 
@@ -381,7 +381,7 @@ const scraperObject =
                                     {
                                         if(detailContentElement.length > 0)
                                         {
-                                            productContent = productContent.replace(element.prop('outerHTML'), `<a href="tel:${phoneNumber}" title="${phoneNumber}" class="phone-number">${phoneNumber}</a>`);
+                                            productContent = productContent.replace($(element).prop('outerHTML'), `<a href="tel:${phoneNumber}" title="${phoneNumber}" class="phone-number">${phoneNumber}</a>`);
                                         }
                                     }
                                 }
