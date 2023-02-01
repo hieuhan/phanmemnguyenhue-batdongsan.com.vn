@@ -318,10 +318,10 @@ const scraperObject =
                         {
                             await scraperObject.logError(`decryptPhone raw ${raw}`, error, pageUrl, productUrl);
         
-                            reject('');
+                            reject(['', '']);
                         }
         
-                        resolve(phoneNumber);
+                        resolve([raw, phoneNumber]);
                     });
 
                     const phoneEventElement = $('.re__main-sidebar .phoneEvent.js__phone-event').first();
@@ -333,31 +333,6 @@ const scraperObject =
                             var raw = phoneEventElement.attr('raw');
 
                             raws.push(raw);
-
-                            var phoneNumber = await decryptPhone(pageUrl, productUrl, raw);
-
-                            if(phoneNumber.length > 0)
-                            {
-                                if(productTitleElement.length > 0)
-                                {
-                                    const hiddenMobileOnTitleElement = productTitleElement.find('.hidden-mobile.m-on-title').first();
-
-                                    if(hiddenMobileOnTitleElement.length > 0)
-                                    {
-                                        title = title.replace(hiddenMobileOnTitleElement.prop('outerHTML'), `${phoneNumber}`);
-                                    }
-                                }
-
-                                const hiddenPhoneByRawElement = productDetailWebElement.find(`.hidden-mobile.hidden-phone.m-cover.js__btn-tracking[raw="${raw}"]`);
-
-                                if(hiddenPhoneByRawElement.length > 0)
-                                {
-                                    hiddenPhoneByRawElement.each(function(index, element)
-                                    {
-                                        productContent = productContent.replace($(element).prop('outerHTML'), `<a href="tel:${phoneNumber}" title="${phoneNumber}" class="phone-number">${phoneNumber}</a>`);
-                                    });
-                                }
-                            }
                         }
                     }
 
@@ -374,19 +349,44 @@ const scraperObject =
                                 if(!raws.includes(raw))
                                 {
                                     raws.push(raw);
-
-                                    var phoneNumber = await decryptPhone(pageUrl, productUrl, raw);
-
-                                    if(phoneNumber.length > 0)
-                                    {
-                                        if(detailContentElement.length > 0)
-                                        {
-                                            productContent = productContent.replace($(element).prop('outerHTML'), `<a href="tel:${phoneNumber}" title="${phoneNumber}" class="phone-number">${phoneNumber}</a>`);
-                                        }
-                                    }
                                 }
                             }
                         });
+                    }
+
+                    if(raws.length > 0)
+                    {
+                        for(index in raws)
+                        {
+                            const [currentRaw, currentPhoneNumber] = await decryptPhone(pageUrl, productUrl, raws[index]);
+
+                            if(currentPhoneNumber.length > 0)
+                            {
+                                if(productTitleElement.length > 0)
+                                {
+                                    const hiddenMobileOnTitleElement = productTitleElement.find('.hidden-mobile.m-on-title').first();
+
+                                    if(hiddenMobileOnTitleElement.length > 0)
+                                    {
+                                        title = title.replace(hiddenMobileOnTitleElement.prop('outerHTML'), `${currentPhoneNumber}`);
+                                    }
+                                }
+
+                                const hiddenPhoneByRawElement = productDetailWebElement.find(`.hidden-mobile.hidden-phone.m-cover.js__btn-tracking[raw="${currentRaw}"]`);
+
+                                if(hiddenPhoneByRawElement.length > 0)
+                                {
+                                    hiddenPhoneByRawElement.each(function(index, element)
+                                    {
+                                        productContent = productContent.replace($(element).prop('outerHTML'), `<a href="tel:${currentPhoneNumber}" title="${currentPhoneNumber}" class="phone-number">${currentPhoneNumber}</a>`);
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                title = productTitleElement.text();
+                            }
+                        }
                     }
                 } 
                 catch (error) 
